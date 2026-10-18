@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AegisPass - Secure Password Manager Authentication</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Ambient background lighting -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-grid"></div>
+
+  <div class="app-container">
+    <!-- Header / Brand -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span class="pulse-ring"></span>
+        </div>
+        <div class="brand-text">
+          <h1>AEGIS<span>VAULT</span></h1>
+          <span class="tagline">Zero-Knowledge Password Manager</span>
+        </div>
+      </div>
+      <div class="security-badge">
+        <span class="dot live"></span>
+        <span>AES-256 GCM • 2FA Protected</span>
+      </div>
+    </header>
+
+    <!-- Main Card -->
+    <main class="auth-card">
+      <!-- Steps Indicator -->
+      <div class="steps-progress">
+        <div class="step-item active" id="stepIndicator1">
+          <div class="step-number">1</div>
+          <span class="step-label">Mobile Auth</span>
+        </div>
+        <div class="step-connector" id="stepConnector"></div>
+        <div class="step-item" id="stepIndicator2">
+          <div class="step-number">2</div>
+          <span class="step-label">Verification</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" id="stepIndicator3">
+          <div class="step-number"><i class="fa-solid fa-lock-open"></i></div>
+          <span class="step-label">Vault Access</span>
+        </div>
+      </div>
+
+      <!-- Notification Toast -->
+      <div id="toast" class="toast hidden">
+        <i class="toast-icon fa-solid fa-circle-info"></i>
+        <div class="toast-content">
+          <strong id="toastTitle">Notification</strong>
+          <span id="toastMsg">Message here</span>
+        </div>
+      </div>
+
+      <!-- VIEW 1: Phone Input Screen -->
+      <section id="step1View" class="step-view active">
+        <div class="view-header">
+          <div class="icon-avatar">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+          </div>
+          <h2>Secure 2FA Login</h2>
+          <p>Enter your registered mobile number to receive a one-time verification code via WhatsApp or SMS.</p>
+        </div>
+
+        <form id="phoneForm" onsubmit="event.preventDefault(); handleSendOtp();">
+          <div class="form-group">
+            <label for="phoneNumber">Mobile Number</label>
+            <div class="input-wrapper phone-input-box">
+              <div class="country-prefix">
+                <span class="flag-icon">🇮🇳</span>
+                <select id="countryCodeSelect">
+                  <option value="+91" selected>+91 (IN)</option>
+                  <option value="+1">+1 (US)</option>
+                  <option value="+44">+44 (UK)</option>
+                  <option value="+971">+971 (UAE)</option>
+                  <option value="+65">+65 (SG)</option>
+                  <option value="+61">+61 (AU)</option>
+                  <option value="+49">+49 (DE)</option>
+                </select>
+              </div>
+              <input 
+                type="tel" 
+                id="phoneNumber" 
+                placeholder="98765 43210" 
+                autocomplete="tel" 
+                required 
+                maxlength="15"
+              />
+            </div>
+            <div class="input-hint">
+              <i class="fa-solid fa-circle-shield"></i>
+              Instant delivery via MiniMoth multi-channel routing.
+            </div>
+          </div>
+
+          <button type="submit" id="sendOtpBtn" class="btn btn-primary btn-block">
+            <span class="btn-text">
+              <i class="fa-solid fa-paper-plane"></i> Send Verification Code
+            </span>
+            <div class="btn-loader hidden">
+              <div class="spinner"></div>
+              <span>Dispatching OTP...</span>
+            </div>
+          </button>
+        </form>
+
+        <div class="security-callout">
+          <i class="fa-solid fa-fingerprint"></i>
+          <div>
+            <strong>End-to-End Encrypted</strong>
+            <p>Your master vault key will be unlocked only upon successful cryptographic token exchange.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: OTP Verification Screen -->
+      <section id="step2View" class="step-view">
+        <div class="view-header">
+          <div class="icon-avatar pulse">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <h2>Enter 6-Digit Code</h2>
+          <p>We've sent a code to <strong id="displayPhone">+91 ••••• •••••</strong></p>
+          <button type="button" class="btn-text-only" onclick="changePhoneNumber()">
+            <i class="fa-solid fa-pen-to-square"></i> Change Number
+          </button>
+        </div>
+
+        <form id="otpForm" onsubmit="event.preventDefault(); handleVerifyOtp();">
+          <div class="otp-inputs-wrapper">
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" autofocus />
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+            <input type="text" class="otp-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" />
+          </div>
+
+          <!-- Quick Paste Action -->
+          <div class="paste-helper">
+            <button type="button" class="btn-link" onclick="pasteFromClipboard()">
+              <i class="fa-regular fa-clipboard"></i> Paste Code from Clipboard
+            </button>
+          </div>
+
+          <div class="resend-container">
+            <span id="timerText">Resend code in <strong id="countdown">45s</strong></span>
+            <button type="button" id="resendBtn" class="btn-link hidden" onclick="handleSendOtp(true)">
+              <i class="fa-solid fa-rotate-right"></i> Resend OTP Code
+            </button>
+          </div>
+
+          <button type="submit" id="verifyOtpBtn" class="btn btn-primary btn-block">
+            <span class="btn-text">
+              <i class="fa-solid fa-unlock-keyhole"></i> Verify & Unlock Vault
+            </span>
+            <div class="btn-loader hidden">
+              <div class="spinner"></div>
+              <span>Verifying with Server...</span>
+            </div>
+          </button>
+        </form>
+      </section>
+
+      <!-- VIEW 3: Vault Dashboard (Unlocked Success) -->
+      <section id="step3View" class="step-view">
+        <div class="vault-success-header">
+          <div class="success-icon-badge">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <h2>Vault Unlocked</h2>
+          <p>Session cryptographically authenticated via MiniMoth live OTP token.</p>
+        </div>
+
+        <div class="auth-token-card">
+          <div class="token-header">
+            <span><i class="fa-solid fa-shield-cat"></i> Identity & Session Token</span>
+            <span class="badge-active">ACTIVE SESSION</span>
+          </div>
+          <div class="token-body">
+            <div class="token-field">
+              <label>Phone Number:</label>
+              <code id="sessionPhone">+91 ••••••••••</code>
+            </div>
+            <div class="token-field">
+              <label>Session Expiry:</label>
+              <code id="sessionExpires">1 Hour (Refreshable)</code>
+            </div>
+            <div class="token-field">
+              <label>Bearer Token:</label>
+              <code id="sessionToken" class="truncate">eyJhbGciOi...</code>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sample Password Manager Entries Demo -->
+        <div class="vault-items-preview">
+          <div class="preview-title">
+            <h3><i class="fa-solid fa-vault"></i> Your Passwords (Demo Vault)</h3>
+            <button class="btn-badge"><i class="fa-solid fa-plus"></i> Add Item</button>
+          </div>
+
+          <div class="vault-list">
+            <div class="vault-item">
+              <div class="vault-item-left">
+                <div class="service-icon github"><i class="fa-brands fa-github"></i></div>
+                <div class="service-details">
+                  <h4>GitHub Enterprise</h4>
+                  <span>admin@organization.io</span>
+                </div>
+              </div>
+              <div class="vault-item-actions">
+                <span class="masked-pwd">••••••••••••••••</span>
+                <button class="btn-action-icon" title="Copy Password" onclick="copyDemoPwd('gh_pat_9182379182749812')">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="vault-item">
+              <div class="vault-item-left">
+                <div class="service-icon aws"><i class="fa-brands fa-aws"></i></div>
+                <div class="service-details">
+                  <h4>AWS Production Root</h4>
+                  <span>devops-master@cloud.corp</span>
+                </div>
+              </div>
+              <div class="vault-item-actions">
+                <span class="masked-pwd">••••••••••••••••</span>
+                <button class="btn-action-icon" title="Copy Password" onclick="copyDemoPwd('Kx9#mP$98!vWq2@L')">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="vault-item">
+              <div class="vault-item-left">
+                <div class="service-icon google"><i class="fa-brands fa-google"></i></div>
+                <div class="service-details">
+                  <h4>Google Workspace</h4>
+                  <span>security-team@work.com</span>
+                </div>
+              </div>
+              <div class="vault-item-actions">
+                <span class="masked-pwd">••••••••••••••••</span>
+                <button class="btn-action-icon" title="Copy Password" onclick="copyDemoPwd('Zq7!8mK#p09@Alpha')">
+                  <i class="fa-regular fa-copy"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-secondary btn-block" onclick="lockVault()">
+          <i class="fa-solid fa-lock"></i> Lock Vault & Sign Out
+        </button>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>
+        <i class="fa-solid fa-shield-virus"></i> Protected with MiniMoth Auth API • 
+        <a href="https://minimoth.dev" target="_blank" rel="noreferrer">Powered by MiniMoth</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
